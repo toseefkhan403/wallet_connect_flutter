@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:wallet_connect_flutter/view_sessions.dart';
@@ -5,6 +7,7 @@ import 'package:wallet_connect_flutter/view_sessions.dart';
 void main() {
   runApp(const MyApp());
 }
+
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -89,7 +92,15 @@ class _MyHomePageState extends State<MyHomePage> {
   void initConnection() async {
     Navigator.pop(context);
     try {
-      var value = await platform.invokeMethod('initConnection');
+      print("uriController.text: ${uriController.text}");
+      var parameters = {'uri':uriController.text};
+      var value = await platform.invokeMethod('initConnection' , parameters );
+
+      print("valueeee0 $value");
+      var json1 = json.decode(value);
+      print("valueeee1 ${json1}");
+      print("valueeee2 ${json1.toString()}");
+
 
       showDialog(context: context, builder: (c) => Dialog(child: Container(child: Text(value.toString()),),));
     } catch (e) {
