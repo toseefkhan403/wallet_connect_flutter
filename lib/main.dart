@@ -60,6 +60,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   static const platform = MethodChannel('connectionChannel');
+  static const approveplatform = MethodChannel('approveChannel');
   TextEditingController uriController = TextEditingController();
 
   @override
@@ -192,7 +193,8 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.pop(context);
 
     try {
-      var value = await platform.invokeMethod('approve' , {'accountId' : '987338983394e08af4ec715e765373fe8c13302e'});
+      var value = await approveplatform.invokeMethod('approve' , {'accountId' : '987338983394e08af4ec715e765373fe8c13302e'});
+      print('approvevalue : $value');
     } catch (e) {
       print(e);
     }

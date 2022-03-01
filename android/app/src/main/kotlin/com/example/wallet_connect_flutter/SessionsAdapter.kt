@@ -25,7 +25,9 @@ class SessionsAdapter(private val listener: SessionActionListener) : RecyclerVie
         notifyDataSetChanged()
     }
 
-
+    fun getUpdateList():List<WalletConnect.Model.SettledSession> {
+        return sessions;
+    }
     inner class SessionViewHolder(private val view: View, private val listener: SessionActionListener) : RecyclerView.ViewHolder(view) {
 
       /*  private val binding = SessionItemBinding.bind(view)

@@ -14,6 +14,7 @@ import org.json.JSONObject
 
 
 const val CHANNEL = "connectionChannel"
+const val APPROVE_CHANNEL = "approveChannel"
 //class MainActivity: FlutterActivity() {
 class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     val TAG = MainActivity::class.java.simpleName
@@ -31,66 +32,76 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
         super.configureFlutterEngine(flutterEngine)
 
 
-connectChannel()
+            connectChannel()
+//            approveRequestChannel()
 
     }
 
+    var methodChannelNameStr=""
     fun connectChannel(){
-
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
-            Log.e(TAG, "call.args: ${call.arguments}")
-            Log.e(TAG, "call.args: ${call.argument<String>("uri")}")
-
-            approveDialog(result)
-
             if(call.method=="initConnection"){
+                methodChannelNameStr="initConnection"
                 viewModel.pair(call.argument<String>("uri")!!)
-
+                approveDialog(result)
             }
+        }
+    }
 
+    /*
+    * send approve request to wallet and return to flutter
+    * */
+  fun approveRequestChannel()
+    {
+        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, APPROVE_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
+                call, result ->
+            Log.d(TAG, "call.args: ${call.arguments}")
+
+            if(call.method=="approve") {
+                methodChannelNameStr = "approve"
+                viewModel.approve(call.argument<String>("accountId")!!)
+            }
         }
     }
 
 
+    /*
+    * send back to flutter for approve dialog show in flutter
+    * */
     fun approveDialog(result: MethodChannel.Result){
 
         viewModel.eventFlow.observe(this) { event ->
             Log.e(TAG,"eventttt $event")
 
-            when (event) {
+            when (event ) {
                 is InitSessionsList -> {
 //                    sessionAdapter.updateList(event.sessions)
                 }
                 is ShowSessionProposalDialog -> {
-                    Log.e(TAG,"event.proposal>> "+event.proposal)
-                   /* proposalDialog = SessionProposalDialog(
+                    if(methodChannelNameStr == "initConnection") {
+                        Log.e(TAG, "event.proposal>> " + event.proposal)/* proposalDialog = SessionProposalDialog(
                         requireContext(),
                         viewModel::approve,
                         viewModel::reject,
                         event.proposal
                     )
                     proposalDialog?.show()*/
-                    val v : WalletConnect.Model.SessionProposal = event.proposal
-                    val postData = JSONObject()
-                    postData.put("name" , v.name)
-                    postData.put("accounts" , v.accounts)
-                    postData.put("chains" , v.chains)
-                    postData.put("description" , v.description)
-                    postData.put("icon" , v.icon)
-                    postData.put("icons" , v.icons)
-                    postData.put("isController" , v.isController)
-                    postData.put("methods" , v.methods)
-                    postData.put("proposerPublicKey" , v.proposerPublicKey)
-                    postData.put("relayProtocol" , v.relayProtocol)
-                    postData.put("topic" , v.topic)
-                    //                    result.success(v.toString())
-
-                    result.success(postData.toString())
-
-
-                    //                    connectChannel(JSONObject(event.proposal.toString()))
-
+                        val v: WalletConnect.Model.SessionProposal = event.proposal
+                        val postData = JSONObject()
+                        postData.put("name", v.name)
+                        postData.put("accounts", v.accounts)
+                        postData.put("chains", v.chains)
+                        postData.put("description", v.description)
+                        postData.put("icon", v.icon)
+                        postData.put("icons", v.icons)
+                        postData.put("isController", v.isController)
+                        postData.put("methods", v.methods)
+                        postData.put("proposerPublicKey", v.proposerPublicKey)
+                        postData.put("relayProtocol", v.relayProtocol)
+                        postData.put("topic", v.topic)
+                        result.success(postData.toString())
+                    }
                 }
                 is ShowSessionRequestDialog -> {
                     /*requestDialog = SessionRequestDialog(
@@ -103,12 +114,21 @@ connectChannel()
                     requestDialog?.show()*/
                 }
                 is UpdateActiveSessions -> {
-                    sessionAdapter.updateList(event.sessions)
-                    /*proposalDialog?.dismiss()
+                    if(methodChannelNameStr == "approve") {
+                        sessionAdapter.updateList(event.sessions)
+                        Log.d(TAG, "event.sessions>>>> " + event.sessions)
+                        Log.d(TAG, "event.sessions.size>>>> " + event.sessions.size)
 
-                    event.message?.let {
-                        Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
-                    }*/
+                        val list = ArrayList<WalletConnect.Model.SettledSession>()
+                        list.add(sessionAdapter.getUpdateList().get(0))
+                        result.success(list.toString())
+                        Log.d(TAG, "sendresultttt kotlin to flutter")
+                        /*proposalDialog?.dismiss()
+                    */
+                       /* event.message?.let {
+                            Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+                        }*/
+                    }
                 }
                 is RejectSession -> {
 //                    proposalDialog?.dismiss()

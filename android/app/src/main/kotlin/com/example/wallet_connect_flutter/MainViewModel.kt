@@ -25,7 +25,7 @@ class MainViewModel : ViewModel() , WalletConnectClient.WalletDelegate{
         WalletConnectClient.pair(pair, object : WalletConnect.Listeners.Pairing {
             override fun onSuccess(settledPairing: WalletConnect.Model.SettledPairing) {
                 //Settled pairing
-                Log.e(TAG , "wwwwwww pair onsuccess ${settledPairing}")
+                Log.d(TAG , "paironsuccess : ${settledPairing}")
 
             }
 
@@ -36,14 +36,14 @@ class MainViewModel : ViewModel() , WalletConnectClient.WalletDelegate{
     }
 
 
-    fun approve() {
-        val accounts = proposal.chains.map { chainId -> "$chainId:0x022c0c42a80bd19EA4cF0F94c4F9F96645759716" }
+    fun approve(chainIdStr:String) {
+//        val accounts = proposal.chains.map { chainId -> "$chainId:0x022c0c42a80bd19EA4cF0F94c4F9F96645759716" }
+        val accounts = proposal.chains.map { chainId -> "$chainId:$chainIdStr" }
         val approve = WalletConnect.Params.Approve(proposal, accounts)
 
         WalletConnectClient.approve(approve, object : WalletConnect.Listeners.SessionApprove {
 
             override fun onSuccess(settledSession: WalletConnect.Model.SettledSession) {
-                Log.e(TAG , "wwwwwww approve request ")
                 viewModelScope.launch { _eventFlow.emit(UpdateActiveSessions(WalletConnectClient.getListOfSettledSessions())) }
             }
 
