@@ -17,6 +17,7 @@ import org.json.JSONObject
 const val CHANNEL = "connectionChannel"
 const val APPROVE_CHANNEL = "approveChannel"
 const val CHANNEL_LIST = "channellist"
+const val REJECT_CHANNEL = "rejectChannel"
 //class MainActivity: FlutterActivity() {
 class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     val TAG = MainActivity::class.java.simpleName
@@ -37,6 +38,7 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
             connectChannel()
             approveRequestChannel()
             channelList()
+            rejectChannel()
 
     }
 
@@ -50,6 +52,17 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                 viewModel.pair(call.argument<String>("uri")!!)
                 golbalresult = result
                 approveDialog()
+            }
+        }
+    }
+
+
+    fun rejectChannel(){
+        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, REJECT_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
+                call, result ->
+            if(call.method=="reject"){
+                methodChannelNameStr="reject"
+                golbalresult = result
             }
         }
     }
@@ -178,6 +191,10 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                 }
                 is RejectSession -> {
 //                    proposalDialog?.dismiss()
+                    //rejectChannel
+                    if(methodChannelNameStr == "reject") {
+                        golbalresult.success(true)
+                    }
                 }
                 is PingSuccess -> Toast.makeText(this , "Successful session ping", Toast.LENGTH_SHORT).show()
             }

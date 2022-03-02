@@ -60,6 +60,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   static const platform = MethodChannel('connectionChannel');
+  static const rejectplatform = MethodChannel('rejectChannel');
   static const approveplatform = MethodChannel('approveChannel');
   TextEditingController uriController = TextEditingController();
 
@@ -204,7 +205,8 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.pop(context);
 
     try {
-      var value = await platform.invokeMethod('reject');
+      var value = await rejectplatform.invokeMethod('reject');
+      print("rejectchannelvalue $value");
     } catch (e) {
       print(e);
     }
