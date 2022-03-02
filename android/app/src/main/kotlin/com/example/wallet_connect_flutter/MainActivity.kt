@@ -18,6 +18,7 @@ const val CHANNEL = "connectionChannel"
 const val APPROVE_CHANNEL = "approveChannel"
 const val CHANNEL_LIST = "channellist"
 const val REJECT_CHANNEL = "rejectChannel"
+const val DISCONNECT_TOPIC_CHANNEL = "disconnectTopicChannel"
 //class MainActivity: FlutterActivity() {
 class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     val TAG = MainActivity::class.java.simpleName
@@ -39,11 +40,13 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
             approveRequestChannel()
             channelList()
             rejectChannel()
+            disconnectTopicChannel()
 
     }
 
     var methodChannelNameStr=""
     lateinit var golbalresult: MethodChannel.Result
+    lateinit var disconnectresult: MethodChannel.Result
     fun connectChannel(){
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
@@ -56,13 +59,33 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
         }
     }
 
-
+    /*
+    * reject the join session request
+    * */
     fun rejectChannel(){
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, REJECT_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
             if(call.method=="reject"){
                 methodChannelNameStr="reject"
                 golbalresult = result
+            }
+        }
+    }
+
+    /*
+    * disconnect from any channel topic
+    * */
+    fun disconnectTopicChannel(){
+        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, DISCONNECT_TOPIC_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
+                call, result ->
+            Log.e(TAG,"disconnectTopicChannel.method>> "+call.method)
+            if(call.method=="disconnectTopic"){
+                methodChannelNameStr="disconnectTopic"
+                disconnectresult = result
+                val topic = call.argument<String>("topic")!!
+                viewModel.disconnect(topic)
+               disconnectresult.success(topic)
+
             }
         }
     }
@@ -203,6 +226,10 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 
     override fun onDisconnect(session: WalletConnect.Model.SettledSession) {
         viewModel.disconnect(session.topic)
+        if(methodChannelNameStr == "disconnectTopic") {
+            golbalresult.success(session.topic)
+        }
+
     }
 
     override fun onUpdate(session: WalletConnect.Model.SettledSession) {

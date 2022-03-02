@@ -14,6 +14,7 @@ class ViewSessions extends StatefulWidget {
 
 class _ViewSessionsState extends State<ViewSessions> {
   static const channelListPlatform = MethodChannel('channellist');
+  static const disconnectTopicChannelPlatform = MethodChannel('disconnectTopicChannel');
 
   List<WalletConnectSession> wcSessions = [];
 
@@ -69,7 +70,7 @@ class _ViewSessionsState extends State<ViewSessions> {
     WalletConnectSession item = listItems[index];
     return InkWell(
       onTap: () {
-        showDialog(context: context, builder: (c) => endSessionDialog(c));
+        showDialog(context: context, builder: (c) => endSessionDialog(c , listItems[index]));
       },
       child: Container(
         padding: EdgeInsets.all(20.0),
@@ -106,9 +107,9 @@ class _ViewSessionsState extends State<ViewSessions> {
                       color: Color(0xff87898E))),
               Text(item.methods,
                   style: const TextStyle(
-                      fontSize: 14.0,
+                      fontSize: 12.0,
                       fontFamily: 'Roboto',
-                      overflow: TextOverflow.ellipsis,
+                      overflow: TextOverflow.clip,
                       color: Color(0xff87898E))),
             ],
           ),
@@ -117,7 +118,7 @@ class _ViewSessionsState extends State<ViewSessions> {
     );
   }
 
-  Widget endSessionDialog(context) {
+  Widget endSessionDialog(context,WalletConnectSession item) {
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -170,7 +171,10 @@ class _ViewSessionsState extends State<ViewSessions> {
                           child: Text('Yes',
                               style: Theme.of(context).textTheme.bodyText1),
                         ),
-                        onPressed: endSession),
+                        onPressed: (){
+                          endSession(item)   ;
+    }
+    ),
                   ),
                 ),
                 const SizedBox(
@@ -202,9 +206,11 @@ class _ViewSessionsState extends State<ViewSessions> {
   }
 
   // TODO
-  void endSession() async {
+  void endSession(WalletConnectSession item) async {
     try {
-      var value = await channelListPlatform.invokeMethod('disconnect');
+      print("EndSessionClick");
+      var value = await disconnectTopicChannelPlatform.invokeMethod('disconnectTopic' , {'topic' : item.topic});
+      print('disconnect :$value');
     } catch (e) {
       print(e);
     }
