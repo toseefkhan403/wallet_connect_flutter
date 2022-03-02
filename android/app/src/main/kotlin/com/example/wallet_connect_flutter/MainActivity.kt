@@ -7,6 +7,7 @@ import android.widget.Toast
 import androidx.annotation.NonNull
 import androidx.lifecycle.ViewModelProvider
 import com.walletconnect.walletconnectv2.client.WalletConnect
+import com.walletconnect.walletconnectv2.client.WalletConnectClient
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -17,6 +18,7 @@ import org.json.JSONObject
 const val CHANNEL = "connectionChannel"
 const val APPROVE_CHANNEL = "approveChannel"
 const val CHANNEL_LIST = "channellist"
+const val INITIAL_CHANNEL_LIST = "initialchannellist"
 const val REJECT_CHANNEL = "rejectChannel"
 const val DISCONNECT_TOPIC_CHANNEL = "disconnectTopicChannel"
 //class MainActivity: FlutterActivity() {
@@ -29,20 +31,23 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // view model instance
-        viewModel= ViewModelProvider(this).get(MainViewModel::class.java)
-        mContext = this@MainActivity
     }
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-
+        viewModel= ViewModelProvider(this).get(MainViewModel::class.java)
+        mContext = this@MainActivity
             connectChannel()
             approveRequestChannel()
             channelList()
+            initialchannelList()
             rejectChannel()
             disconnectTopicChannel()
-
+            approveDialog()
     }
+
+
+
 
     var methodChannelNameStr=""
     lateinit var golbalresult: MethodChannel.Result
@@ -54,7 +59,7 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                 methodChannelNameStr="initConnection"
                 viewModel.pair(call.argument<String>("uri")!!)
                 golbalresult = result
-                approveDialog()
+//                approveDialog()
             }
         }
     }
@@ -108,19 +113,56 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     }
 
 
+    fun initialchannelList()
+    {
+        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, INITIAL_CHANNEL_LIST).setMethodCallHandler { // Note: this method is invoked on the main thread.
+                call, result ->
+
+            Log.e(TAG,"initialchannellistDatacall.methoddd: ${call.method}")
+            if(call.method=="initialchannellistData") {
+                methodChannelNameStr = "initialchannellistData"
+                Log.e(TAG,"initialchannellistDatacall.methoddd: ${call.method} ${WalletConnectClient.getListOfSettledSessions().size}")
+
+                if(viewModel.initialList().size>0){
+                    val jsonArray = JSONArray()
+                    /*for(i in sessionAdapter.getUpdateList()) {
+                        val postData = JSONObject()
+                        Log.e(TAG,"i.topic: ${i.topic}")
+                        postData.put("topic",i.topic)
+                        postData.put("accounts",i.accounts)
+                        postData.put("accounts",i.accounts)
+                        postData.put("peermeta_description",i.peerAppMetaData?.description)
+                        postData.put("peermeta_name",i.peerAppMetaData?.name)
+                        postData.put("peermeta_url",i.peerAppMetaData?.url)
+                        postData.put("peermeta_icons",i.peerAppMetaData?.icons)
+
+
+                        postData.put("permissons_blockchain" , i.permissions.blockchain.chains)
+                        postData.put("permissons_jsonRpc" , i.permissions.jsonRpc.methods)
+                        postData.put("permissons_notifications" , i.permissions.notifications.types)
+                        jsonArray.put(postData)
+                    }*/
+                    Log.e(TAG,"jsonArr: "+jsonArray.length())
+                    Log.e(TAG,"jsonArr.toString: "+jsonArray.toString())
+//                    result.success(jsonArray.toString())
+                        result.success( manageList(viewModel.initialList()).toString())
+                }
+            }
+        }
+    }
+
     fun channelList()
     {
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL_LIST).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
-            Log.d(TAG, "call.args: ${call.arguments}  ${call.method}")
 
             if(call.method=="channellistData") {
                 methodChannelNameStr = "channellistData"
-//                result.success("Test")
-                Log.e(TAG,"sessionAdapter.getUpdateList(): ${sessionAdapter.getUpdateList()} ")
-                if(sessionAdapter.getUpdateList()!=null && sessionAdapter.getUpdateList().size>0){
-                    Log.d(TAG,"sessionAdapter.getUpdateList()>> "+sessionAdapter.getUpdateList().size)
-                    val jsonArray = JSONArray()
+
+                if(sessionAdapter.getUpdateList().size>0){
+                    result.success( manageList(sessionAdapter.getUpdateList()).toString())
+                }
+                    /*val jsonArray = JSONArray()
                     for(i in sessionAdapter.getUpdateList()) {
                         val postData = JSONObject()
                         Log.e(TAG,"i.topic: ${i.topic}")
@@ -141,7 +183,7 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                     Log.e(TAG,"jsonArr: "+jsonArray.length())
                     Log.e(TAG,"jsonArr.toString: "+jsonArray.toString())
                     result.success(jsonArray.toString())
-                }
+                }*/
             }
         }
     }
@@ -153,11 +195,33 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     fun approveDialog(){
 
         viewModel.eventFlow.observe(this) { event ->
-            Log.e(TAG,"eventttt $event")
+            Log.e(TAG,"initialeventttt $event")
 
             when (event ) {
                 is InitSessionsList -> {
-//                    sessionAdapter.updateList(event.sessions)
+                    Log.e(TAG,"InitSessionsListInitSessionsList")
+//                    channelList()
+                    sessionAdapter.updateList(event.sessions)
+                   /* if(event.sessions.size>0){
+                        val jsonArray = JSONArray()
+                        for(i in event.sessions) {
+                            val postData = JSONObject()
+                            postData.put("topic",i.topic)
+                            postData.put("accounts",i.accounts)
+                            postData.put("accounts",i.accounts)
+                            postData.put("peermeta_description",i.peerAppMetaData?.description)
+                            postData.put("peermeta_name",i.peerAppMetaData?.name)
+                            postData.put("peermeta_url",i.peerAppMetaData?.url)
+                            postData.put("peermeta_icons",i.peerAppMetaData?.icons)
+
+
+                            postData.put("permissons_blockchain" , i.permissions.blockchain.chains)
+                            postData.put("permissons_jsonRpc" , i.permissions.jsonRpc.methods)
+                            postData.put("permissons_notifications" , i.permissions.notifications.types)
+                            jsonArray.put(postData)
+                        }
+                        golbalresult.success(jsonArray.toString())
+                    }*/
                 }
                 is ShowSessionProposalDialog -> {
                     if(methodChannelNameStr == "initConnection") {
@@ -247,6 +311,28 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     override fun onSessionsDetails(session: WalletConnect.Model.SettledSession) {
 
 //        SessionDetailsDialog(this, session).show()
+    }
+
+    fun manageList(list : List<WalletConnect.Model.SettledSession>):JSONArray{
+        val jsonArray = JSONArray()
+        for(i in sessionAdapter.getUpdateList()) {
+            val postData = JSONObject()
+            Log.e(TAG,"i.topic: ${i.topic}")
+            postData.put("topic",i.topic)
+            postData.put("accounts",i.accounts)
+            postData.put("accounts",i.accounts)
+            postData.put("peermeta_description",i.peerAppMetaData?.description)
+            postData.put("peermeta_name",i.peerAppMetaData?.name)
+            postData.put("peermeta_url",i.peerAppMetaData?.url)
+            postData.put("peermeta_icons",i.peerAppMetaData?.icons)
+
+
+            postData.put("permissons_blockchain" , i.permissions.blockchain.chains)
+            postData.put("permissons_jsonRpc" , i.permissions.jsonRpc.methods)
+            postData.put("permissons_notifications" , i.permissions.notifications.types)
+            jsonArray.put(postData)
+        }
+        return jsonArray
     }
 
 }

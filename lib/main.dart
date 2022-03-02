@@ -32,13 +32,13 @@ class _MyAppState extends State<MyApp> {
   }
 
   init() async {
-    try {
+  /*  try {
       var value = await platform.invokeMethod('getBottomSheets');
 
       showModalBottomSheet(context: context, builder: (c) => Container(child: Text(value.toString()),));
     } catch (e) {
       print(e);
-    }
+    }*/
   }
 
   @override

@@ -20,6 +20,10 @@ class MainViewModel : ViewModel() , WalletConnectClient.WalletDelegate{
         WalletConnectClient.setWalletDelegate(this)
     }
 
+    fun initialList() :List<WalletConnect.Model.SettledSession>{
+      return WalletConnectClient.getListOfSettledSessions()
+    }
+
     fun pair(uri: String) {
         val pair = WalletConnect.Params.Pair(uri.trim())
         WalletConnectClient.pair(pair, object : WalletConnect.Listeners.Pairing {

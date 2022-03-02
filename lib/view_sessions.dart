@@ -14,13 +14,15 @@ class ViewSessions extends StatefulWidget {
 
 class _ViewSessionsState extends State<ViewSessions> {
   static const channelListPlatform = MethodChannel('channellist');
+  static const initialchannelListPlatform = MethodChannel('initialchannellist');
   static const disconnectTopicChannelPlatform = MethodChannel('disconnectTopicChannel');
 
   List<WalletConnectSession> wcSessions = [];
 
   @override
   void initState() {
-    init();
+    // init();
+    initChannelList();
     super.initState();
   }
 
@@ -51,6 +53,26 @@ class _ViewSessionsState extends State<ViewSessions> {
     try {
       var value = await channelListPlatform.invokeMethod('channellistData');
       print('channelList : ${value}');
+      var jsonList = json.decode(value) as List;
+
+      for(var json in jsonList) {
+        wcSessions.add(WalletConnectSession.fromJson(json));
+      }
+
+      print('list $wcSessions');
+      setState(() {});
+
+    } catch (e) {
+      print(e);
+    }
+  }
+
+
+
+  void initChannelList() async {
+    try {
+      var value = await initialchannelListPlatform.invokeMethod('initialchannellistData');
+      print('initialchannellistData : ${value}');
       var jsonList = json.decode(value) as List;
 
       for(var json in jsonList) {
