@@ -21,6 +21,7 @@ const val CHANNEL_LIST = "channellist"
 const val INITIAL_CHANNEL_LIST = "initialchannellist"
 const val REJECT_CHANNEL = "rejectChannel"
 const val DISCONNECT_TOPIC_CHANNEL = "disconnectTopicChannel"
+const val METHODS_CLICK_CHANNEL = "methodClickChannel"
 //class MainActivity: FlutterActivity() {
 class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     val TAG = MainActivity::class.java.simpleName
@@ -44,6 +45,7 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
             rejectChannel()
             disconnectTopicChannel()
             approveDialog()
+        methodClickChannel()
     }
 
 
@@ -122,30 +124,27 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 
                 if(viewModel.initialList().size>0){
                     val jsonArray = JSONArray()
-                    /*for(i in sessionAdapter.getUpdateList()) {
-                        val postData = JSONObject()
-                        Log.e(TAG,"i.topic: ${i.topic}")
-                        postData.put("topic",i.topic)
-                        postData.put("accounts",i.accounts)
-                        postData.put("accounts",i.accounts)
-                        postData.put("peermeta_description",i.peerAppMetaData?.description)
-                        postData.put("peermeta_name",i.peerAppMetaData?.name)
-                        postData.put("peermeta_url",i.peerAppMetaData?.url)
-                        postData.put("peermeta_icons",i.peerAppMetaData?.icons)
 
-
-                        postData.put("permissons_blockchain" , i.permissions.blockchain.chains)
-                        postData.put("permissons_jsonRpc" , i.permissions.jsonRpc.methods)
-                        postData.put("permissons_notifications" , i.permissions.notifications.types)
-                        jsonArray.put(postData)
-                    }*/
-                    Log.e(TAG,"jsonArr: "+jsonArray.length())
-                    Log.e(TAG,"jsonArr.toString: "+jsonArray.toString())
 //                    result.success(jsonArray.toString())
                         result.success( manageList(viewModel.initialList()).toString())
                 }else{
                     result.success( manageList(ArrayList()).toString())
                 }
+            }
+        }
+    }
+
+
+    fun methodClickChannel()
+    {
+        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, METHODS_CLICK_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
+                call, result ->
+
+            if(call.method=="methodClickChannel") {
+                methodChannelNameStr = "methodClickChannel"
+
+                golbalresult = result
+
             }
         }
     }
@@ -157,32 +156,10 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 
             if(call.method=="channellistData") {
                 methodChannelNameStr = "channellistData"
-
                 if(sessionAdapter.getUpdateList().size>0){
                     result.success( manageList(sessionAdapter.getUpdateList()).toString())
                 }
-                    /*val jsonArray = JSONArray()
-                    for(i in sessionAdapter.getUpdateList()) {
-                        val postData = JSONObject()
-                        Log.e(TAG,"i.topic: ${i.topic}")
-                        postData.put("topic",i.topic)
-                        postData.put("accounts",i.accounts)
-                        postData.put("accounts",i.accounts)
-                        postData.put("peermeta_description",i.peerAppMetaData?.description)
-                        postData.put("peermeta_name",i.peerAppMetaData?.name)
-                        postData.put("peermeta_url",i.peerAppMetaData?.url)
-                        postData.put("peermeta_icons",i.peerAppMetaData?.icons)
 
-
-                        postData.put("permissons_blockchain" , i.permissions.blockchain.chains)
-                        postData.put("permissons_jsonRpc" , i.permissions.jsonRpc.methods)
-                        postData.put("permissons_notifications" , i.permissions.notifications.types)
-                        jsonArray.put(postData)
-                    }
-                    Log.e(TAG,"jsonArr: "+jsonArray.length())
-                    Log.e(TAG,"jsonArr.toString: "+jsonArray.toString())
-                    result.success(jsonArray.toString())
-                }*/
             }
         }
     }
@@ -198,39 +175,11 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 
             when (event ) {
                 is InitSessionsList -> {
-                    Log.e(TAG,"InitSessionsListInitSessionsList")
-//                    channelList()
                     sessionAdapter.updateList(event.sessions)
-                   /* if(event.sessions.size>0){
-                        val jsonArray = JSONArray()
-                        for(i in event.sessions) {
-                            val postData = JSONObject()
-                            postData.put("topic",i.topic)
-                            postData.put("accounts",i.accounts)
-                            postData.put("accounts",i.accounts)
-                            postData.put("peermeta_description",i.peerAppMetaData?.description)
-                            postData.put("peermeta_name",i.peerAppMetaData?.name)
-                            postData.put("peermeta_url",i.peerAppMetaData?.url)
-                            postData.put("peermeta_icons",i.peerAppMetaData?.icons)
 
-
-                            postData.put("permissons_blockchain" , i.permissions.blockchain.chains)
-                            postData.put("permissons_jsonRpc" , i.permissions.jsonRpc.methods)
-                            postData.put("permissons_notifications" , i.permissions.notifications.types)
-                            jsonArray.put(postData)
-                        }
-                        golbalresult.success(jsonArray.toString())
-                    }*/
                 }
                 is ShowSessionProposalDialog -> {
                     if(methodChannelNameStr == "initConnection") {
-                        Log.e(TAG, "event.proposal>> " + event.proposal)/* proposalDialog = SessionProposalDialog(
-                        requireContext(),
-                        viewModel::approve,
-                        viewModel::reject,
-                        event.proposal
-                    )
-                    proposalDialog?.show()*/
                         val v: WalletConnect.Model.SessionProposal = event.proposal
                         val postData = JSONObject()
                         postData.put("name", v.name)
@@ -256,12 +205,31 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                         event.session
                     )
                     requestDialog?.show()*/
+
+                   Log.e(TAG, "methodChannelNameStr> "+  (methodChannelNameStr))
+                   Log.e(TAG, "EEEEErespondRequest> "+  (event.sessionRequest))
+                   Log.e(TAG, "EEEEErespondRequest> "+  viewModel.respondRequest(event.sessionRequest))
+
+                    if(methodChannelNameStr=="methodClickChannel") {
+                        val sessionRequest = event.sessionRequest
+                        val postData = JSONObject()
+                        postData.put("chainId", sessionRequest.chainId)
+                        val jsonRpcReq =  sessionRequest.request
+                        var jsonRpc = JSONObject()
+                        jsonRpc.put("id",jsonRpcReq.id)
+                        jsonRpc.put("method",jsonRpcReq.method)
+                        jsonRpc.put("params",jsonRpcReq.params)
+
+                        postData.put("jsonrequest", jsonRpc)
+                        postData.put("topic", sessionRequest.topic)
+                        Log.e(TAG,"postData.toString() >> ${postData.toString()}")
+                        golbalresult.success(postData.toString())
+
+                    }
+
                 }
                 is UpdateActiveSessions -> {
 
-                    Log.e(TAG,"UpdateActiveSessions:  ${sessionAdapter.getUpdateList()}")
-                    Log.e(TAG,"UpdateActiveSessionsmethodChannelNameStr:  ${methodChannelNameStr}")
-                    Log.e(TAG,"UpdateActiveSessionsSettleList:  ${viewModel.initialList()}")
 
                     if(methodChannelNameStr == "approve") {
                         sessionAdapter.updateList(event.sessions)
