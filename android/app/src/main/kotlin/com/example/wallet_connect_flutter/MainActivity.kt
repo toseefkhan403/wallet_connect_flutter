@@ -134,10 +134,10 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
         }
     }
 
-
+    lateinit var methodChannel: MethodChannel
     fun methodClickChannel()
     {
-        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, METHODS_CLICK_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
+       /* MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, METHODS_CLICK_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
 
             if(call.method=="methodClickChannel") {
@@ -146,7 +146,19 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                 golbalresult = result
 
             }
-        }
+        }*/
+
+        methodChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, METHODS_CLICK_CHANNEL)
+            /*.setMethodCallHandler { // Note: this method is invoked on the main thread.
+                call, result ->
+
+            if(call.method=="methodClickChannel") {
+                methodChannelNameStr = "methodClickChannel"
+
+                golbalresult = result
+
+            }
+        }*/
     }
 
     fun channelList()
@@ -210,7 +222,7 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                    Log.e(TAG, "EEEEErespondRequest> "+  (event.sessionRequest))
                    Log.e(TAG, "EEEEErespondRequest> "+  viewModel.respondRequest(event.sessionRequest))
 
-                    if(methodChannelNameStr=="methodClickChannel") {
+//                    if(methodChannelNameStr=="methodClickChannel") {
                         val sessionRequest = event.sessionRequest
                         val postData = JSONObject()
                         postData.put("chainId", sessionRequest.chainId)
@@ -223,9 +235,10 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                         postData.put("jsonrequest", jsonRpc)
                         postData.put("topic", sessionRequest.topic)
                         Log.e(TAG,"postData.toString() >> ${postData.toString()}")
-                        golbalresult.success(postData.toString())
+//                        golbalresult.success(postData.toString())
+                        methodChannel.invokeMethod("methodClickChannel" , postData.toString())
 
-                    }
+//                    }
 
                 }
                 is UpdateActiveSessions -> {
