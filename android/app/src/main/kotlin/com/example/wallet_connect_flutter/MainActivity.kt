@@ -102,8 +102,6 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     {
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, APPROVE_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
-            Log.d(TAG, "call.args: ${call.arguments}")
-
             if(call.method=="approve") {
                 methodChannelNameStr = "approve"
                 golbalresult = result
@@ -118,7 +116,6 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, INITIAL_CHANNEL_LIST).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
 
-            Log.e(TAG,"initialchannellistDatacall.methoddd: ${call.method}")
             if(call.method=="initialchannellistData") {
                 methodChannelNameStr = "initialchannellistData"
                 Log.e(TAG,"initialchannellistDatacall.methoddd: ${call.method} ${WalletConnectClient.getListOfSettledSessions().size}")
@@ -146,6 +143,8 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                     Log.e(TAG,"jsonArr.toString: "+jsonArray.toString())
 //                    result.success(jsonArray.toString())
                         result.success( manageList(viewModel.initialList()).toString())
+                }else{
+                    result.success( manageList(ArrayList()).toString())
                 }
             }
         }
@@ -259,21 +258,26 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                     requestDialog?.show()*/
                 }
                 is UpdateActiveSessions -> {
+
+                    Log.e(TAG,"UpdateActiveSessions:  ${sessionAdapter.getUpdateList()}")
+                    Log.e(TAG,"UpdateActiveSessionsmethodChannelNameStr:  ${methodChannelNameStr}")
+                    Log.e(TAG,"UpdateActiveSessionsSettleList:  ${viewModel.initialList()}")
+
                     if(methodChannelNameStr == "approve") {
                         sessionAdapter.updateList(event.sessions)
-                        Log.d(TAG, "event.sessions>>>> " + event.sessions)
-                        Log.d(TAG, "event.sessions.size>>>> " + event.sessions.size)
 
                         val list = ArrayList<WalletConnect.Model.SettledSession>()
                         list.add(sessionAdapter.getUpdateList().get(0))
                         golbalresult.success(list.toString())
-                        Log.d(TAG, "sendresultttt kotlin to flutter")
                         channelList()
                         /*proposalDialog?.dismiss()
                     */
                        /* event.message?.let {
                             Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
                         }*/
+                    }else{
+
+
                     }
                 }
                 is RejectSession -> {
@@ -315,7 +319,8 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 
     fun manageList(list : List<WalletConnect.Model.SettledSession>):JSONArray{
         val jsonArray = JSONArray()
-        for(i in sessionAdapter.getUpdateList()) {
+//        for(i in sessionAdapter.getUpdateList()) {
+        for(i in list) {
             val postData = JSONObject()
             Log.e(TAG,"i.topic: ${i.topic}")
             postData.put("topic",i.topic)
