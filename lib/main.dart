@@ -2,22 +2,18 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:wallet_connect_flutter/txn_dialog.dart';
 import 'package:wallet_connect_flutter/view_sessions.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatefulWidget {
+final navigatorKey = GlobalKey<NavigatorState>();
+
+class MyApp extends StatelessWidget {
+
   const MyApp({Key? key}) : super(key: key);
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-
-  static const platform = MethodChannel('walletConnectChannel');
 
   @override
   Widget build(BuildContext context) {
@@ -27,24 +23,9 @@ class _MyAppState extends State<MyApp> {
         brightness: Brightness.dark,
         primarySwatch: Colors.blue,
       ),
+      navigatorKey: navigatorKey,
       home: const MyHomePage(title: 'Flutter Home Page'),
     );
-  }
-
-  init() async {
-  /*  try {
-      var value = await platform.invokeMethod('getBottomSheets');
-
-      showModalBottomSheet(context: context, builder: (c) => Container(child: Text(value.toString()),));
-    } catch (e) {
-      print(e);
-    }*/
-  }
-
-  @override
-  void initState() {
-    init();
-    super.initState();
   }
 }
 
@@ -63,6 +44,23 @@ class _MyHomePageState extends State<MyHomePage> {
   static const rejectplatform = MethodChannel('rejectChannel');
   static const approveplatform = MethodChannel('approveChannel');
   TextEditingController uriController = TextEditingController();
+
+  static const methodsChannelPlatform = MethodChannel('methodClickChannel');
+
+  @override
+  void initState() {
+    methodsChannelPlatform.setMethodCallHandler(_handleMethod);
+    super.initState();
+  }
+
+  Future<dynamic> _handleMethod(MethodCall call) async {
+    switch(call.method) {
+      case "methodClickChannel":
+        print('methods : ' + call.arguments.toString());
+        showTxnDialog(navigatorKey.currentContext, json.decode(call.arguments.toString()));
+        return Future.value("");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

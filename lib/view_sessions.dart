@@ -18,16 +18,12 @@ class _ViewSessionsState extends State<ViewSessions> {
   static const disconnectTopicChannelPlatform = MethodChannel(
       'disconnectTopicChannel');
 
-  static const methodsChannelPlatform = MethodChannel(
-      'methodClickChannel');
-
   List<WalletConnectSession> wcSessions = [];
 
   @override
   void initState() {
     // init();
     initChannelList();
-    methodsClickChannel();
     super.initState();
   }
 
@@ -87,19 +83,6 @@ class _ViewSessionsState extends State<ViewSessions> {
       }
 
       print('list $wcSessions');
-      setState(() {});
-    } catch (e) {
-      print(e);
-    }
-  }
-
-
-  void methodsClickChannel() async {
-    try {
-      var value = await methodsChannelPlatform.invokeMethod(
-          'methodClickChannel');
-      print('methodChannel : ${value}');
-
       setState(() {});
     } catch (e) {
       print(e);
