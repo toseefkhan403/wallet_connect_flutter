@@ -15,7 +15,8 @@ class ViewSessions extends StatefulWidget {
 class _ViewSessionsState extends State<ViewSessions> {
   static const channelListPlatform = MethodChannel('channellist');
   static const initialchannelListPlatform = MethodChannel('initialchannellist');
-  static const disconnectTopicChannelPlatform = MethodChannel('disconnectTopicChannel');
+  static const disconnectTopicChannelPlatform = MethodChannel(
+      'disconnectTopicChannel');
 
   List<WalletConnectSession> wcSessions = [];
 
@@ -36,7 +37,8 @@ class _ViewSessionsState extends State<ViewSessions> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: wcSessions.length,
-            itemBuilder: (BuildContext context, int index) => sessionsListView(wcSessions, index, context),
+            itemBuilder: (BuildContext context, int index) =>
+                sessionsListView(wcSessions, index, context),
           ) : const Padding(
             padding: EdgeInsets.only(top: 50.0),
             child: Center(
@@ -48,51 +50,52 @@ class _ViewSessionsState extends State<ViewSessions> {
     );
   }
 
-
   void init() async {
+    wcSessions.clear();
+
     try {
       var value = await channelListPlatform.invokeMethod('channellistData');
       print('channelList : ${value}');
       var jsonList = json.decode(value) as List;
 
-      for(var json in jsonList) {
+      for (var json in jsonList) {
         wcSessions.add(WalletConnectSession.fromJson(json));
       }
 
       print('list $wcSessions');
       setState(() {});
-
     } catch (e) {
       print(e);
     }
   }
 
-
-
   void initChannelList() async {
+    wcSessions.clear();
+
     try {
-      var value = await initialchannelListPlatform.invokeMethod('initialchannellistData');
+      var value = await initialchannelListPlatform.invokeMethod(
+          'initialchannellistData');
       print('initialchannellistData : ${value}');
       var jsonList = json.decode(value) as List;
 
-      for(var json in jsonList) {
+      for (var json in jsonList) {
         wcSessions.add(WalletConnectSession.fromJson(json));
       }
 
       print('list $wcSessions');
       setState(() {});
-
     } catch (e) {
       print(e);
     }
   }
 
-  Widget sessionsListView(
-      List<WalletConnectSession> listItems, int index, context) {
+  Widget sessionsListView(List<WalletConnectSession> listItems, int index,
+      context) {
     WalletConnectSession item = listItems[index];
     return InkWell(
       onTap: () {
-        showDialog(context: context, builder: (c) => endSessionDialog(c , listItems[index]));
+        showDialog(context: context,
+            builder: (c) => endSessionDialog(c, listItems[index]));
       },
       child: Container(
         padding: EdgeInsets.all(20.0),
@@ -140,7 +143,7 @@ class _ViewSessionsState extends State<ViewSessions> {
     );
   }
 
-  Widget endSessionDialog(context,WalletConnectSession item) {
+  Widget endSessionDialog(context, WalletConnectSession item) {
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -175,7 +178,10 @@ class _ViewSessionsState extends State<ViewSessions> {
             ),
             Text(
               "End Session?",
-              style: Theme.of(context).textTheme.bodyText1,
+              style: Theme
+                  .of(context)
+                  .textTheme
+                  .bodyText1,
             ),
             const SizedBox(
               height: 10,
@@ -191,12 +197,14 @@ class _ViewSessionsState extends State<ViewSessions> {
                         child: Padding(
                           padding: const EdgeInsets.all(14.0),
                           child: Text('Yes',
-                              style: Theme.of(context).textTheme.bodyText1),
+                              style: Theme
+                                  .of(context)
+                                  .textTheme
+                                  .bodyText1),
                         ),
-                        onPressed: (){
-                          endSession(item)   ;
-    }
-    ),
+                        onPressed: () {
+                          endSession(item);
+                        }),
                   ),
                 ),
                 const SizedBox(
@@ -207,11 +215,16 @@ class _ViewSessionsState extends State<ViewSessions> {
                     // width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                          primary: Theme.of(context).buttonColor),
+                          primary: Theme
+                              .of(context)
+                              .buttonColor),
                       child: Padding(
                         padding: const EdgeInsets.all(14.0),
                         child: Text('No',
-                            style: Theme.of(context).textTheme.bodyText1),
+                            style: Theme
+                                .of(context)
+                                .textTheme
+                                .bodyText1),
                       ),
                       onPressed: () {
                         Navigator.pop(context);
@@ -227,12 +240,19 @@ class _ViewSessionsState extends State<ViewSessions> {
     );
   }
 
-  // TODO
   void endSession(WalletConnectSession item) async {
+    Navigator.pop(context);
+
     try {
       print("EndSessionClick");
-      var value = await disconnectTopicChannelPlatform.invokeMethod('disconnectTopic' , {'topic' : item.topic});
+      var value = await disconnectTopicChannelPlatform.invokeMethod(
+          'disconnectTopic', {'topic': item.topic});
       print('disconnect :$value');
+      if (value != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Disconnected successfully")));
+        initChannelList();
+      }
     } catch (e) {
       print(e);
     }
