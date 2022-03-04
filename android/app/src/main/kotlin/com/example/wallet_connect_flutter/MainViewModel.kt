@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 
 //wc:d5a77a7c4cdd89e769cf601a7ccd48c80120ce5e76391b1b997af02ad508c3db@2?controller=false&publicKey=530be65eb3cbb158a32d57759fab032173917054d4c29b57121337c604dd5973&relay=%7B%22protocol%22%3A%22waku%22%7D
 class MainViewModel : ViewModel() , WalletConnectClient.WalletDelegate{
-    private var _eventFlow = MutableStateFlow<WalletUiEvent>(InitSessionsList(WalletConnectClient.getListOfSettledSessions()))
+    public var _eventFlow = MutableStateFlow<WalletUiEvent>(InitSessionsList(WalletConnectClient.getListOfSettledSessions()))
     val eventFlow: LiveData<WalletUiEvent> = _eventFlow.asLiveData()
     val TAG = MainViewModel::class.java.simpleName
     var _isPair = MutableLiveData<Boolean>()
@@ -91,12 +91,13 @@ class MainViewModel : ViewModel() , WalletConnectClient.WalletDelegate{
         })
     }
 
-    fun respondRequest(sessionRequest: WalletConnect.Model.SessionRequest) {
+    fun respondRequest(sessionRequest: WalletConnect.Model.SessionRequest , key:String) {
         val response = WalletConnect.Params.Response(
             sessionTopic = sessionRequest.topic,
             jsonRpcResponse = WalletConnect.Model.JsonRpcResponse.JsonRpcResult(
                 sessionRequest.request.id,
-                "0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"
+                key
+//                "0xa3f20717a250c2b0b729b7e5becbff67fdaef7e0699da4de7ca5895b02a170a12d887fd3b17bfdce3481f10bea41f45ba9f709d39ce8325427b57afcfc994cee1b"
             )
         )
 

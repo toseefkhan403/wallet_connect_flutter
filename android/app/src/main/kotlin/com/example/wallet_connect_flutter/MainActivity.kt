@@ -11,6 +11,7 @@ import com.walletconnect.walletconnectv2.client.WalletConnectClient
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import kotlinx.coroutines.flow.update
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -143,10 +144,11 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     lateinit var methodChannel: MethodChannel
     lateinit var approveTXNMethodChannel: MethodChannel
     lateinit var rejectTXNMethodChannel: MethodChannel
+    lateinit var sessionReq:WalletConnect.Model.SessionRequest
     fun methodClickChannel()
     {
         methodChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, METHODS_CLICK_CHANNEL)
-            /*.setMethodCallHandler { // Note: this method is invoked on the main thread.
+        methodChannelNameStr = "methodClickChannel"     /*.setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
 
             if(call.method=="methodClickChannel") {
@@ -163,13 +165,21 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     {
         approveTXNMethodChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, APPROVE_TXN_CHANNEL)
         methodChannelNameStr=="approveTxnCLick"
-
+        approveTXNMethodChannel.setMethodCallHandler { call, result ->
+            Log.e(TAG,"approveTxnChannelParams : ${call.argument<String>("result")}")
+            viewModel.respondRequest(sessionReq,  call.argument<String>("result")!!)
+        }
     }
+
 
     fun rejectTxnChannel()
     {
         rejectTXNMethodChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, REJECT_TXN_CHANNEL)
         methodChannelNameStr=="rejectTxnCLick"
+
+        rejectTXNMethodChannel.setMethodCallHandler { call, result ->
+            viewModel.rejectRequest(sessionReq)
+        }
 
     }
 
@@ -198,7 +208,8 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
             Log.e(TAG,"initialeventttt $event")
 
             when (event ) {
-                is InitSessionsList -> {
+
+                    is InitSessionsList -> {
                     sessionAdapter.updateList(event.sessions)
 
                 }
@@ -231,7 +242,8 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                     requestDialog?.show()*/
 
 
-                    if(methodChannelNameStr=="methodClickChannel") {
+                    // if(methodChannelNameStr=="methodClickChannel")
+//                    {
                         val sessionRequest = event.sessionRequest
                         val postData = JSONObject()
                         postData.put("chainId", sessionRequest.chainId)
@@ -244,19 +256,11 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                         postData.put("jsonrequest", jsonRpc)
                         postData.put("topic", sessionRequest.topic)
                         Log.e(TAG,"postData.toString() >> ${postData.toString()}")
-//                        golbalresult.success(postData.toString())
+                        //                        golbalresult.success(postData.toString())
+                        sessionReq = event.sessionRequest
                         methodChannel.invokeMethod("methodClickChannel" , postData.toString())
 
-                    }else if(methodChannelNameStr=="approveTxnCLick"){
-                        approveTXNMethodChannel.setMethodCallHandler { call, result ->
-                            viewModel.respondRequest(event.sessionRequest)
-                        }
-                    }
-                    else if(methodChannelNameStr=="rejectTxnCLick"){
-                        approveTXNMethodChannel.setMethodCallHandler { call, result ->
-                            viewModel.rejectRequest(event.sessionRequest)
-                        }
-                    }
+//                    }
 
                 }
                 is UpdateActiveSessions -> {
@@ -287,6 +291,7 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                     }
                 }
                 is PingSuccess -> Toast.makeText(this , "Successful session ping", Toast.LENGTH_SHORT).show()
+
             }
         }
     }
