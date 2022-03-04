@@ -95,6 +95,7 @@ void approve() async {
 
   try {
     var value = await approveTxnplatform.invokeMethod('approve' , {'result' : '987338983394e08af4ec715e765373fe8c13302e'});
+
   } catch (e) {
     print(e);
   }

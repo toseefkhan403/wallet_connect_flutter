@@ -22,12 +22,18 @@ const val INITIAL_CHANNEL_LIST = "initialchannellist"
 const val REJECT_CHANNEL = "rejectChannel"
 const val DISCONNECT_TOPIC_CHANNEL = "disconnectTopicChannel"
 const val METHODS_CLICK_CHANNEL = "methodClickChannel"
+const val APPROVE_TXN_CHANNEL = "approveTxnChannel"
+const val REJECT_TXN_CHANNEL = "rejectTxnChannel"
+
 //class MainActivity: FlutterActivity() {
 class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     val TAG = MainActivity::class.java.simpleName
     private lateinit var viewModel: MainViewModel
     private lateinit var mContext:Context
     private val sessionAdapter = SessionsAdapter(this)
+    var methodChannelNameStr=""
+    lateinit var golbalresult: MethodChannel.Result
+    lateinit var disconnectresult: MethodChannel.Result
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,15 +51,15 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
             rejectChannel()
             disconnectTopicChannel()
             approveDialog()
-        methodClickChannel()
+            methodClickChannel()
+            approveTxnChannel()
+            rejectTxnChannel()
     }
 
 
 
 
-    var methodChannelNameStr=""
-    lateinit var golbalresult: MethodChannel.Result
-    lateinit var disconnectresult: MethodChannel.Result
+
     fun connectChannel(){
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
@@ -120,7 +126,7 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 
             if(call.method=="initialchannellistData") {
                 methodChannelNameStr = "initialchannellistData"
-                Log.e(TAG,"initialchannellistDatacall.methoddd: ${call.method} ${WalletConnectClient.getListOfSettledSessions().size}")
+                //Log.e(TAG,"initialchannellistDatacall.methoddd: ${call.method} ${WalletConnectClient.getListOfSettledSessions().size}")
 
                 if(viewModel.initialList().size>0){
                     val jsonArray = JSONArray()
@@ -135,19 +141,10 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     }
 
     lateinit var methodChannel: MethodChannel
+    lateinit var approveTXNMethodChannel: MethodChannel
+    lateinit var rejectTXNMethodChannel: MethodChannel
     fun methodClickChannel()
     {
-       /* MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, METHODS_CLICK_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
-                call, result ->
-
-            if(call.method=="methodClickChannel") {
-                methodChannelNameStr = "methodClickChannel"
-
-                golbalresult = result
-
-            }
-        }*/
-
         methodChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, METHODS_CLICK_CHANNEL)
             /*.setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
@@ -159,6 +156,21 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 
             }
         }*/
+    }
+
+
+    fun approveTxnChannel()
+    {
+        approveTXNMethodChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, APPROVE_TXN_CHANNEL)
+        methodChannelNameStr=="approveTxnCLick"
+
+    }
+
+    fun rejectTxnChannel()
+    {
+        rejectTXNMethodChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, REJECT_TXN_CHANNEL)
+        methodChannelNameStr=="rejectTxnCLick"
+
     }
 
     fun channelList()
@@ -218,11 +230,8 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                     )
                     requestDialog?.show()*/
 
-                   Log.e(TAG, "methodChannelNameStr> "+  (methodChannelNameStr))
-                   Log.e(TAG, "EEEEErespondRequest> "+  (event.sessionRequest))
-                   Log.e(TAG, "EEEEErespondRequest> "+  viewModel.respondRequest(event.sessionRequest))
 
-//                    if(methodChannelNameStr=="methodClickChannel") {
+                    if(methodChannelNameStr=="methodClickChannel") {
                         val sessionRequest = event.sessionRequest
                         val postData = JSONObject()
                         postData.put("chainId", sessionRequest.chainId)
@@ -238,7 +247,16 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 //                        golbalresult.success(postData.toString())
                         methodChannel.invokeMethod("methodClickChannel" , postData.toString())
 
-//                    }
+                    }else if(methodChannelNameStr=="approveTxnCLick"){
+                        approveTXNMethodChannel.setMethodCallHandler { call, result ->
+                            viewModel.respondRequest(event.sessionRequest)
+                        }
+                    }
+                    else if(methodChannelNameStr=="rejectTxnCLick"){
+                        approveTXNMethodChannel.setMethodCallHandler { call, result ->
+                            viewModel.rejectRequest(event.sessionRequest)
+                        }
+                    }
 
                 }
                 is UpdateActiveSessions -> {
