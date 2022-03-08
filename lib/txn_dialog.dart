@@ -7,7 +7,7 @@ const rejectTxnplatform = MethodChannel('rejectTxnChannel');
 const approveTxnplatform = MethodChannel('approveTxnChannel');
 
 void showTxnDialog(context, data) {
-  print('oyoyoyoy called');
+  print('showTxnDialog called');
   showDialog(context: context, builder: (context) => Dialog(
     backgroundColor: Colors.transparent,
     elevation: 0,
@@ -89,7 +89,6 @@ void showTxnDialog(context, data) {
   ));
 }
 
-// TODO
 void approve() async {
   Navigator.pop(navigatorKey.currentContext!);
 

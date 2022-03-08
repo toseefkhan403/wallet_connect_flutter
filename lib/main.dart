@@ -56,7 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<dynamic> _handleMethod(MethodCall call) async {
     switch(call.method) {
       case "methodClickChannel":
-        print('methods : ' + call.arguments.toString());
+        print('methods :: ' + call.arguments.toString());
         showTxnDialog(navigatorKey.currentContext, json.decode(call.arguments.toString()));
         return Future.value("");
     }
@@ -72,10 +72,18 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             ElevatedButton(onPressed: () {
               showDialog(context: context, builder: (c) => Dialog(
-                child: Column( mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                  TextField(controller: uriController,),
-                  ElevatedButton(onPressed: initConnection, child: Text('ok'))
+                  Padding(
+                    padding: const EdgeInsets.all(18.0),
+                    child: TextField(controller: uriController,),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton(onPressed: initConnection, child: Text('ok')),
+                  )
                 ],),
               ));
             }, child: Text('Enter URI'),),

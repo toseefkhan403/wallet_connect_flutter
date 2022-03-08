@@ -104,39 +104,41 @@ class _ViewSessionsState extends State<ViewSessions> {
           SizedBox(
             width: 9.0,
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.name,
-                style: TextStyle(
-                    fontSize: 16.0,
-                    fontFamily: 'Roboto',
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white),
-              ),
-              SizedBox(
-                height: 4,
-              ),
-              Text(item.description,
-                  style: const TextStyle(
-                      fontSize: 14.0,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.name,
+                  style: TextStyle(
+                      fontSize: 16.0,
                       fontFamily: 'Roboto',
-                      overflow: TextOverflow.ellipsis,
-                      color: Color(0xff87898E))),
-              Text(item.chains,
-                  style: const TextStyle(
-                      fontSize: 14.0,
-                      fontFamily: 'Roboto',
-                      overflow: TextOverflow.ellipsis,
-                      color: Color(0xff87898E))),
-              Text(item.methods,
-                  style: const TextStyle(
-                      fontSize: 12.0,
-                      fontFamily: 'Roboto',
-                      overflow: TextOverflow.clip,
-                      color: Color(0xff87898E))),
-            ],
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white),
+                ),
+                SizedBox(
+                  height: 4,
+                ),
+                Text(item.description,
+                    style: const TextStyle(
+                        fontSize: 14.0,
+                        fontFamily: 'Roboto',
+                        overflow: TextOverflow.ellipsis,
+                        color: Color(0xff87898E))),
+                Text(item.chains,
+                    style: const TextStyle(
+                        fontSize: 14.0,
+                        fontFamily: 'Roboto',
+                        overflow: TextOverflow.ellipsis,
+                        color: Color(0xff87898E))),
+                Text(item.methods,
+                    style: const TextStyle(
+                        fontSize: 12.0,
+                        fontFamily: 'Roboto',
+                        overflow: TextOverflow.clip,
+                        color: Color(0xff87898E))),
+              ],
+            ),
           ),
         ]),
       ),
