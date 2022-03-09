@@ -5,6 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:wallet_connect_flutter/txn_dialog.dart';
 import 'package:wallet_connect_flutter/view_sessions.dart';
 
+// 1. call shutdown sdk
+// 2. call session without pairing again
+// 3. ability to handle custom json-rpc requests
 void main() {
   runApp(const MyApp());
 }
@@ -43,6 +46,9 @@ class _MyHomePageState extends State<MyHomePage> {
   static const platform = MethodChannel('connectionChannel');
   static const rejectplatform = MethodChannel('rejectChannel');
   static const approveplatform = MethodChannel('approveChannel');
+  static const shutdownplatform = MethodChannel('shutdownChannel');
+  DateTime? currentBackPressTime;
+
   TextEditingController uriController = TextEditingController();
 
   static const methodsChannelPlatform = MethodChannel('methodClickChannel');
@@ -62,37 +68,67 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  shutdownSDK() async {
+    print("shutdownSDK called");
+    // TODO
+    try {
+
+      var value = await shutdownplatform.invokeMethod('shutdownSDK');
+
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<bool> onWillPop() {
+    DateTime now = DateTime.now();
+    if (currentBackPressTime == null ||
+        now.difference(currentBackPressTime!) > Duration(seconds: 1)) {
+      currentBackPressTime = now;
+      print('onwillpop back pressed');
+      // Scaffold.of(context).showSnackBar(const SnackBar(content: Text('Press back again to exit from the app'), duration: Duration(seconds: 1),));
+
+      return Future.value(false);
+    } else {
+      shutdownSDK();
+      return Future.value(true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.title),),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton(onPressed: () {
-              showDialog(context: context, builder: (c) => Dialog(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                  Padding(
-                    padding: const EdgeInsets.all(18.0),
-                    child: TextField(controller: uriController,),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: ElevatedButton(onPressed: initConnection, child: Text('ok')),
-                  )
-                ],),
-              ));
-            }, child: Text('Enter URI'),),
+      body: WillPopScope(
+        onWillPop: onWillPop,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(onPressed: () {
+                showDialog(context: context, builder: (c) => Dialog(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                    Padding(
+                      padding: const EdgeInsets.all(18.0),
+                      child: TextField(controller: uriController,),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton(onPressed: initConnection, child: Text('ok')),
+                    )
+                  ],),
+                ));
+              }, child: Text('Enter URI'),),
 
-            ElevatedButton(onPressed: () {
-              Navigator.push(context, MaterialPageRoute(builder: (c) => ViewSessions()));
-            }, child: Text('View Sessions'),),
+              ElevatedButton(onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (c) => ViewSessions()));
+              }, child: Text('View Sessions'),),
 
-          ],
+            ],
+          ),
         ),
       ),
     );
