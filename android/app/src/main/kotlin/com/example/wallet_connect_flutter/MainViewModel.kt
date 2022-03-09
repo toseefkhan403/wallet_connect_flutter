@@ -6,6 +6,7 @@ import com.walletconnect.walletconnectv2.client.WalletConnect
 import com.walletconnect.walletconnectv2.client.WalletConnectClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.lang.Exception
 
 //wc:d5a77a7c4cdd89e769cf601a7ccd48c80120ce5e76391b1b997af02ad508c3db@2?controller=false&publicKey=530be65eb3cbb158a32d57759fab032173917054d4c29b57121337c604dd5973&relay=%7B%22protocol%22%3A%22waku%22%7D
 class MainViewModel : ViewModel() , WalletConnectClient.WalletDelegate{
@@ -21,26 +22,50 @@ class MainViewModel : ViewModel() , WalletConnectClient.WalletDelegate{
     }
 
     fun initialList() :List<WalletConnect.Model.SettledSession>{
+        Log.e(TAG,"WalletConnectClient.getListOfSettledSessions(): ${WalletConnectClient.getListOfSettledSessions()}")
       return WalletConnectClient.getListOfSettledSessions()
     }
 
+
+
+
     fun pair(uri: String) {
-        val pair = WalletConnect.Params.Pair(uri.trim())
-        WalletConnectClient.pair(pair, object : WalletConnect.Listeners.Pairing {
-            override fun onSuccess(settledPairing: WalletConnect.Model.SettledPairing) {
-                //Settled pairing
-                Log.d(TAG , "paironsuccess : ${settledPairing}")
 
+        try {
+            val list :  List<WalletConnect.Model.SettledPairing> = WalletConnectClient.getListOfSettledPairings()
+
+            for(i in list) {
+                Log.e(TAG, "list:>>>>> ${i}")
             }
 
-            override fun onError(error: Throwable) {
-                //Pairing approval error
-            }
-        })
+            Log.e(TAG,"list: ${list.size}")
+            Log.e(TAG,"uri: ${uri}")
+
+
+            val pair = WalletConnect.Params.Pair(uri.trim())
+
+            WalletConnectClient.pair(pair, object : WalletConnect.Listeners.Pairing {
+                override fun onSuccess(settledPairing: WalletConnect.Model.SettledPairing) { //Settled pairing
+                    Log.d(TAG, "paironsuccessSS : ${settledPairing}")
+
+                }
+
+                override fun onError(error: Throwable) { //Pairing approval error
+                    Log.e(TAG,"onError: ")
+                }
+            })
+        }catch (e:Throwable){
+            e.printStackTrace()
+            Log.e(TAG,"EEEEE: ${e.message}")
+        }finally {
+
+            Log.e(TAG,"FInallyEEEEE: ")
+        }
     }
 
 
     fun approve(chainIdStr:String) {
+        try {
 //        val accounts = proposal.chains.map { chainId -> "$chainId:0x022c0c42a80bd19EA4cF0F94c4F9F96645759716" }
         val accounts = proposal.chains.map { chainId -> "$chainId:$chainIdStr" }
         val approve = WalletConnect.Params.Approve(proposal, accounts)
@@ -53,8 +78,16 @@ class MainViewModel : ViewModel() , WalletConnectClient.WalletDelegate{
 
             override fun onError(error: Throwable) {
                 //Approve session error
+                Log.e(TAG,"onError: ${error.message}")
             }
         })
+        }catch (e:Throwable){
+            e.printStackTrace()
+            Log.e(TAG,"EEEEE: ${e.message}")
+        }finally {
+
+            Log.e(TAG,"FInallyEEEEE2: ")
+        }
     }
 
     fun reject() {
@@ -74,6 +107,8 @@ class MainViewModel : ViewModel() , WalletConnectClient.WalletDelegate{
     }
 
     fun disconnect(topic: String) {
+        try {
+
         val disconnect = WalletConnect.Params.Disconnect(
             sessionTopic = topic,
             reason = "User disconnects"
@@ -89,6 +124,11 @@ class MainViewModel : ViewModel() , WalletConnectClient.WalletDelegate{
                 //Session disconnect error
             }
         })
+        }
+catch (ee:Exception)
+{
+    Log.e(TAG,"EEEEdisconnect: ${ee.message}")
+}
     }
 
     fun respondRequest(sessionRequest: WalletConnect.Model.SessionRequest , key:String) {

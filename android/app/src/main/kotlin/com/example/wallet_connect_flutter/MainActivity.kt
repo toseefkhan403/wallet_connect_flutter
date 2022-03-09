@@ -14,9 +14,11 @@ import io.flutter.plugin.common.MethodChannel
 import kotlinx.coroutines.flow.update
 import org.json.JSONArray
 import org.json.JSONObject
+import java.lang.Exception
 
 
 const val CHANNEL = "connectionChannel"
+const val SESSION_PROPOSAL_CHANNEL = "sessionProposalChannel"
 const val APPROVE_CHANNEL = "approveChannel"
 const val CHANNEL_LIST = "channellist"
 const val INITIAL_CHANNEL_LIST = "initialchannellist"
@@ -25,6 +27,7 @@ const val DISCONNECT_TOPIC_CHANNEL = "disconnectTopicChannel"
 const val METHODS_CLICK_CHANNEL = "methodClickChannel"
 const val APPROVE_TXN_CHANNEL = "approveTxnChannel"
 const val REJECT_TXN_CHANNEL = "rejectTxnChannel"
+const val SHUTDOWN_CHANNEL = "shutdownChannel"
 
 //class MainActivity: FlutterActivity() {
 class MainActivity: FlutterFragmentActivity() , SessionActionListener{
@@ -45,6 +48,7 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 
         viewModel= ViewModelProvider(this).get(MainViewModel::class.java)
         mContext = this@MainActivity
+        try {
             connectChannel()
             approveRequestChannel()
             channelList()
@@ -53,22 +57,49 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
             disconnectTopicChannel()
             approveDialog()
             methodClickChannel()
+            sessionProposalClickChannel()
             approveTxnChannel()
             rejectTxnChannel()
+
+            shutDownChannel()
+
+        }catch (e:Throwable)
+        {
+            Log.e(TAG,"EEXXCEEPTION : ${e.message}")
+        }
     }
 
 
+    /*
+    * shut down sdk
+    * */
+    fun shutDownChannel()
+    {
 
+        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, SHUTDOWN_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
+                call, result ->
+            if(call.method=="shutdownSDK"){
+                Log.d(TAG,"Start Shutdown SDK")
+                WalletConnectClient.shutdown()
+                Log.d(TAG,"End Shutdown SDK")
+            }
+        }
 
+    }
 
     fun connectChannel(){
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
             if(call.method=="initConnection"){
                 methodChannelNameStr="initConnection"
-                viewModel.pair(call.argument<String>("uri")!!)
-                golbalresult = result
-//                approveDialog()
+                try {
+                    Log.e(TAG ,"methodChannelNameStr $methodChannelNameStr" )
+                    viewModel.pair(call.argument<String>("uri")!!)
+                    golbalresult = result
+                }catch (e:Exception)
+                {
+                    Log.e(TAG,"EEEEEEEEE")
+                }
             }
         }
     }
@@ -79,9 +110,12 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     fun rejectChannel(){
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, REJECT_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
+            Log.e(TAG,"rejectChannel  ${call.method}  ${call.arguments} " +
+                    "    ")
             if(call.method=="reject"){
                 methodChannelNameStr="reject"
                 golbalresult = result
+
             }
         }
     }
@@ -92,7 +126,6 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     fun disconnectTopicChannel(){
         MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, DISCONNECT_TOPIC_CHANNEL).setMethodCallHandler { // Note: this method is invoked on the main thread.
                 call, result ->
-            Log.e(TAG,"disconnectTopicChannel.method>> "+call.method)
             if(call.method=="disconnectTopic"){
                 methodChannelNameStr="disconnectTopic"
                 disconnectresult = result
@@ -127,12 +160,7 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 
             if(call.method=="initialchannellistData") {
                 methodChannelNameStr = "initialchannellistData"
-                //Log.e(TAG,"initialchannellistDatacall.methoddd: ${call.method} ${WalletConnectClient.getListOfSettledSessions().size}")
-
                 if(viewModel.initialList().size>0){
-                    val jsonArray = JSONArray()
-
-//                    result.success(jsonArray.toString())
                         result.success( manageList(viewModel.initialList()).toString())
                 }else{
                     result.success( manageList(ArrayList()).toString())
@@ -142,22 +170,20 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     }
 
     lateinit var methodChannel: MethodChannel
+    lateinit var sessionProposalChannel: MethodChannel
     lateinit var approveTXNMethodChannel: MethodChannel
     lateinit var rejectTXNMethodChannel: MethodChannel
     lateinit var sessionReq:WalletConnect.Model.SessionRequest
     fun methodClickChannel()
     {
         methodChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, METHODS_CLICK_CHANNEL)
-        methodChannelNameStr = "methodClickChannel"     /*.setMethodCallHandler { // Note: this method is invoked on the main thread.
-                call, result ->
+        methodChannelNameStr = "methodClickChannel"
+    }
 
-            if(call.method=="methodClickChannel") {
-                methodChannelNameStr = "methodClickChannel"
-
-                golbalresult = result
-
-            }
-        }*/
+    fun sessionProposalClickChannel()
+    {
+        sessionProposalChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, SESSION_PROPOSAL_CHANNEL)
+        methodChannelNameStr = "sessionProposalChannel"
     }
 
 
@@ -166,7 +192,6 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
         approveTXNMethodChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, APPROVE_TXN_CHANNEL)
         methodChannelNameStr=="approveTxnCLick"
         approveTXNMethodChannel.setMethodCallHandler { call, result ->
-            Log.e(TAG,"approveTxnChannelParams : ${call.argument<String>("result")}")
             viewModel.respondRequest(sessionReq,  call.argument<String>("result")!!)
         }
     }
@@ -176,7 +201,6 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     {
         rejectTXNMethodChannel =  MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, REJECT_TXN_CHANNEL)
         methodChannelNameStr=="rejectTxnCLick"
-
         rejectTXNMethodChannel.setMethodCallHandler { call, result ->
             viewModel.rejectRequest(sessionReq)
         }
@@ -193,7 +217,6 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                 if(sessionAdapter.getUpdateList().size>0){
                     result.success( manageList(sessionAdapter.getUpdateList()).toString())
                 }
-
             }
         }
     }
@@ -204,11 +227,10 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     * */
     fun approveDialog(){
 
+        try{
+
         viewModel.eventFlow.observe(this) { event ->
-            Log.e(TAG,"initialeventttt $event")
-
             when (event ) {
-
                     is InitSessionsList -> {
                     sessionAdapter.updateList(event.sessions)
 
@@ -229,21 +251,27 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                         postData.put("relayProtocol", v.relayProtocol)
                         postData.put("topic", v.topic)
                         golbalresult.success(postData.toString())
+                    }else if(methodChannelNameStr=="sessionProposalChannel")
+                    {
+                        val v: WalletConnect.Model.SessionProposal = event.proposal
+                        val postData = JSONObject()
+                        postData.put("name", v.name)
+                        postData.put("accounts", v.accounts)
+                        postData.put("chains", v.chains)
+                        postData.put("description", v.description)
+                        postData.put("icon", v.icon)
+                        postData.put("icons", v.icons)
+                        postData.put("isController", v.isController)
+                        postData.put("methods", v.methods)
+                        postData.put("proposerPublicKey", v.proposerPublicKey)
+                        postData.put("relayProtocol", v.relayProtocol)
+                        postData.put("topic", v.topic)
+                        sessionProposalChannel.invokeMethod("sessionProposalChannel" , postData.toString())
                     }
                 }
                 is ShowSessionRequestDialog -> {
-                    /*requestDialog = SessionRequestDialog(
-                        requireContext(),
-                        { sessionRequest -> viewModel.respondRequest(sessionRequest) },
-                        { sessionRequest -> viewModel.rejectRequest(sessionRequest) },
-                        event.sessionRequest,
-                        event.session
-                    )
-                    requestDialog?.show()*/
 
 
-                    // if(methodChannelNameStr=="methodClickChannel")
-//                    {
                         val sessionRequest = event.sessionRequest
                         val postData = JSONObject()
                         postData.put("chainId", sessionRequest.chainId)
@@ -256,11 +284,8 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
                         postData.put("jsonrequest", jsonRpc)
                         postData.put("topic", sessionRequest.topic)
                         Log.e(TAG,"postData.toString() >> ${postData.toString()}")
-                        //                        golbalresult.success(postData.toString())
                         sessionReq = event.sessionRequest
                         methodChannel.invokeMethod("methodClickChannel" , postData.toString())
-
-//                    }
 
                 }
                 is UpdateActiveSessions -> {
@@ -294,6 +319,15 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
 
             }
         }
+
+        }catch (e:Throwable)
+        {
+
+        }catch (e:Exception)
+        {
+
+        }
+
     }
 
     override fun onDisconnect(session: WalletConnect.Model.SettledSession) {
@@ -334,8 +368,6 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
             postData.put("peermeta_name",i.peerAppMetaData?.name)
             postData.put("peermeta_url",i.peerAppMetaData?.url)
             postData.put("peermeta_icons",i.peerAppMetaData?.icons)
-
-
             postData.put("permissons_blockchain" , i.permissions.blockchain.chains)
             postData.put("permissons_jsonRpc" , i.permissions.jsonRpc.methods)
             postData.put("permissons_notifications" , i.permissions.notifications.types)

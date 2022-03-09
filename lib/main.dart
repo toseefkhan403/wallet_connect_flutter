@@ -47,6 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
   static const rejectplatform = MethodChannel('rejectChannel');
   static const approveplatform = MethodChannel('approveChannel');
   static const shutdownplatform = MethodChannel('shutdownChannel');
+  static const sessionProposalplatform = MethodChannel('sessionProposalChannel');
   DateTime? currentBackPressTime;
 
   TextEditingController uriController = TextEditingController();
@@ -56,6 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     methodsChannelPlatform.setMethodCallHandler(_handleMethod);
+    sessionProposalplatform.setMethodCallHandler(_handleMethod);
     super.initState();
   }
 
@@ -65,7 +67,12 @@ class _MyHomePageState extends State<MyHomePage> {
         print('methods :: ' + call.arguments.toString());
         showTxnDialog(navigatorKey.currentContext, json.decode(call.arguments.toString()));
         return Future.value("");
-    }
+
+    case "sessionProposalChannel":
+    print('sessionProposalChannel :: ' + call.arguments.toString());
+    showTxnDialog(navigatorKey.currentContext, json.decode(call.arguments.toString()));
+    return Future.value("");
+  }
   }
 
   shutdownSDK() async {
@@ -137,8 +144,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void initConnection() async {
     Navigator.pop(context);
     try {
-      print("uriController.text: ${uriController.text}");
+      print("UUUUUUUUUUuriController.text: ${uriController.text}");
       var parameters = {'uri':uriController.text};
+
       var value = await platform.invokeMethod('initConnection' , parameters);
 
       print('value : $value');
