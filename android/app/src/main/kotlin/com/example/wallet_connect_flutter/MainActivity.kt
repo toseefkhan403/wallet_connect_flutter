@@ -10,7 +10,9 @@ import com.walletconnect.walletconnectv2.client.WalletConnect
 import com.walletconnect.walletconnectv2.client.WalletConnectClient
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.plugins.util.GeneratedPluginRegister
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.PluginRegistry
 import kotlinx.coroutines.flow.update
 import org.json.JSONArray
 import org.json.JSONObject
@@ -30,7 +32,8 @@ const val REJECT_TXN_CHANNEL = "rejectTxnChannel"
 const val SHUTDOWN_CHANNEL = "shutdownChannel"
 
 //class MainActivity: FlutterActivity() {
-class MainActivity: FlutterFragmentActivity() , SessionActionListener{
+class MainActivity: FlutterFragmentActivity() , SessionActionListener,
+    PluginRegistry.PluginRegistrantCallback {
     val TAG = MainActivity::class.java.simpleName
     private lateinit var viewModel: MainViewModel
     private lateinit var mContext:Context
@@ -42,10 +45,11 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // view model instance
+        GeneratedPluginRegister.registerGeneratedPlugins(FlutterEngine(this));
+
     }
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-
         viewModel= ViewModelProvider(this).get(MainViewModel::class.java)
         mContext = this@MainActivity
         try {
@@ -374,6 +378,14 @@ class MainActivity: FlutterFragmentActivity() , SessionActionListener{
             jsonArray.put(postData)
         }
         return jsonArray
+    }
+
+    override fun registerWith(registry: PluginRegistry?) {
+
+//        GeneratedPluginRegistrant.registerWith(FlutterEngine(this))
+
+
+
     }
 
 }

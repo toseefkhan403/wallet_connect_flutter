@@ -56,6 +56,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
+    WidgetsFlutterBinding.ensureInitialized();
+
     methodsChannelPlatform.setMethodCallHandler(_handleMethod);
     sessionProposalplatform.setMethodCallHandler(_handleMethod);
     super.initState();
