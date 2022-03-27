@@ -4,13 +4,13 @@ import android.app.Application
 import com.walletconnect.walletconnectv2.client.WalletConnect
 import com.walletconnect.walletconnectv2.client.WalletConnectClient
 
+
 class AppApplication : Application(){
 
     override fun onCreate() {
         super.onCreate()
 
-        // TODO: Move to Dapp example once separate workflow is added
-        val initDapp = WalletConnect.Params.Init(
+       /* val initDapp = WalletConnect.Params.Init(
             application = this,
             useTls = true,
             hostName = WALLET_CONNECT_URL,
@@ -22,22 +22,8 @@ class AppApplication : Application(){
                 url = "example.dapp",
                 icons = listOf("https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media")
             )
-        )
+        )*/
 
-        // TODO: Move to Wallet example once separate workflow is added
-        /*   val initWallet = WalletConnect.Params.Init(
-               application = this,
-               relayServerUrl = "wss://$WALLET_CONNECT_URL?projectId=",   //TODO: register at https://walletconnect.com/register to get a project ID
-               isController = true,
-               metadata = WalletConnect.Model.AppMetaData(
-                   name = "Kotlin Wallet",
-                   description = "Wallet description",
-                   url = "example.wallet",
-                   icons = listOf("https://gblobscdn.gitbook.com/spaces%2F-LJJeCjcLrr53DcT1Ml7%2Favatar.png?alt=media")
-               )
-           )
-
-           WalletConnectClient.initialize(initWallet)*/
         val initWallet = WalletConnect.Params.Init(
             application = this,
             relayServerUrl = "wss://relay.walletconnect.com?projectId=7fef26ea40a4e8ecb22bc80aa6e4116d",   //TODO: register at https://walletconnect.com/register to get a project ID
